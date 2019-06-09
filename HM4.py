@@ -152,11 +152,10 @@ def MR_kmedian(pointset, k, L, iterations):
    centers = kmeansPP(np.array(centersR1),np.array(weightsR1), k, iterations)
    #---------- ROUND 3 --------------------------
    obj = pointset.repartition(L).map(lambda p: d(p,centers)).reduce(lambda a,b: a+b)
-   # obj = pointset.repartition(L).map(ff)
    return obj
 
 def f1(line):
-   return Vectors.dense([float(coord) for coord in line.split(" ")])
+   return Vectors.dense([float(coord) for coord in line.split(" ") if len(coord) > 0])
 
 def main(argv):
    #Avoided controls on input..
