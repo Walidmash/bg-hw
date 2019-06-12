@@ -98,6 +98,7 @@ def kmeansPP(p,wp,k,iter):
 
         pc = np.delete(pc,randPoint,0)
         wpc = np.delete(wpc,randPoint)
+        mindis = np.delete(mindis,randPoint)
 
     fi = float('inf')
     print("Running Lloyds algorithm...")
@@ -148,16 +149,22 @@ def f2(k, L, iterations, partition):
    return [(vect, weight) for vect,weight in zip(centers,final_weights)]
 def MR_kmedian(pointset, k, L, iterations):
    #---------- ROUND 1 ---------------
-   coreset = pointset.mapPartitions(partial(f2, k, L, iterations))
+   start_time = time.time()
+   coreset = pointset.mapPartitions(partial(f2, k, L, iterations)).collect()
+   print("T1: ", time.time() - start_time)
    #---------- ROUND 2 ---------------
+   start_time = time.time()
    centersR1 = []
    weightsR1 = []
-   for pair in coreset.collect():
+   for pair in coreset:
       centersR1.append(pair[0])
       weightsR1.append(pair[1])
    centers = kmeansPP(np.array(centersR1),np.array(weightsR1), k, iterations)
+   print("T2: ", time.time() - start_time)
    #---------- ROUND 3 --------------------------
+   start_time = time.time()
    obj = pointset.repartition(L).map(lambda p: d(p,centers)).reduce(lambda a,b: a+b)
+   print("T3: ", time.time() - start_time)
    return obj
 
 def f1(line):
